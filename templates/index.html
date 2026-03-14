@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scripture Builder</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Scripture Builder</h1>
+    <p class="subtitle">Add each scripture below, then generate your ProPresenter file.</p>
+
+    <!-- INPUT FORM -->
+    <div class="card">
+      <h2>Add Scripture</h2>
+
+      <div class="field">
+        <label for="verse-ref">Verse reference</label>
+        <input type="text" id="verse-ref" placeholder="e.g. John 3:16">
+      </div>
+
+      <div class="field">
+        <label for="verse-text">Scripture text</label>
+        <textarea id="verse-text" rows="4" placeholder="Paste the scripture text here..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Display on screens</label>
+        <div class="checkboxes">
+          <label><input type="checkbox" value="main"> Main</label>
+          <label><input type="checkbox" value="left_pillar" checked> Left Pillar</label>
+          <label><input type="checkbox" value="right_pillar" checked> Right Pillar</label>
+          <label><input type="checkbox" value="banner" checked> Banner</label>
+        </div>
+      </div>
+
+      <button id="add-btn">Add to list</button>
+    </div>
+
+    <!-- SCRIPTURE LIST -->
+    <div class="card">
+      <h2>Scripture list</h2>
+      <p id="empty-msg" class="muted">No scriptures added yet.</p>
+      <ul id="scripture-list"></ul>
+    </div>
+
+    <!-- GENERATE -->
+    <div class="card">
+      <h2>Generate</h2>
+      <p class="muted">When you're done adding all scriptures, click below to build your ProPresenter file.</p>
+      <button id="generate-btn" class="primary">Generate .pro file</button>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
