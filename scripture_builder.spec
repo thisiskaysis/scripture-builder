@@ -18,6 +18,7 @@ a = Analysis(
         'docx',
         'jinja2',
         'click',
+        'rumps',
     ],
     hookspath=[],
     hooksconfig={},
@@ -63,5 +64,6 @@ app = BUNDLE(
     info_plist={
         'NSHighResolutionCapable': True,
         'LSBackgroundOnly': False,
+        'LSUIElement': True,
     },
 )
