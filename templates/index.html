@@ -9,12 +9,27 @@
 <body>
 
   <div class="container">
-    <h1>Scripture Builder</h1>
-    <p class="subtitle">Add each scripture below, then generate your ProPresenter file.</p>
+    <div class="app-header">
+      <h1>Scripture Builder</h1>
+      <button id="dark-mode-toggle" title="Toggle dark mode">🌙</button>
+    </div>
+    <p class="subtitle">Upload the Pastor's sermon notes or add scriptures manually, then generate your ProPresenter file.</p>
+
+    <!-- UPLOAD CARD -->
+    <div class="card">
+      <h2>Upload sermon notes</h2>
+      <p class="muted" style="margin-bottom: 16px;">Upload the Pastor's .docx file and we'll find all the scriptures automatically.</p>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="doc-upload" accept=".docx" style="display:none">
+        <p>Drop your .docx file here or <span class="upload-link">browse</span></p>
+        <p class="muted" style="font-size:12px; margin-top:4px">.docx files only</p>
+      </div>
+      <div id="upload-status" style="margin-top:12px; display:none;"></div>
+    </div>
 
     <!-- INPUT FORM -->
     <div class="card">
-      <h2>Add Scripture</h2>
+      <h2>Add scripture <span class="hint">— press Enter to add</span></h2>
 
       <div class="field">
         <label for="verse-ref">Verse reference</label>
@@ -32,7 +47,7 @@
           <label><input type="checkbox" value="main"> Main</label>
           <label><input type="checkbox" value="left_pillar" checked> Left Pillar</label>
           <label><input type="checkbox" value="right_pillar" checked> Right Pillar</label>
-          <label><input type="checkbox" value="banner" checked> Banner</label>
+          <label><input type="checkbox" value="banner"> Banner</label>
         </div>
       </div>
 
@@ -41,7 +56,10 @@
 
     <!-- SCRIPTURE LIST -->
     <div class="card">
-      <h2>Scripture list</h2>
+      <div class="list-header">
+        <h2>Scripture list <span id="scripture-count" class="count-badge" style="display:none;"></span></h2>
+        <button id="clear-btn" style="display:none;">Clear all</button>
+      </div>
       <p id="empty-msg" class="muted">No scriptures added yet.</p>
       <ul id="scripture-list"></ul>
     </div>
@@ -49,7 +67,11 @@
     <!-- GENERATE -->
     <div class="card">
       <h2>Generate</h2>
-      <p class="muted">When you're done adding all scriptures, click below to build your ProPresenter file.</p>
+      <div class="field">
+        <label for="service-label">Service label</label>
+        <input type="text" id="service-label" placeholder="e.g. 12 Apr 2026 — The Depth of God's Love">
+      </div>
+      <p class="muted" style="margin-bottom:16px;">When you're done adding all scriptures, click below to build your ProPresenter file.</p>
       <button id="generate-btn" class="primary">Generate .pro file</button>
     </div>
 
