@@ -1,85 +1,113 @@
-import json
+"""
+generator.py
+------------
+Orchestrates the full pipeline from formatted slide payloads to a .pro file.
+
+Pipeline:
+    app.py  →  generator.py  →  formatter.py  →  pro_builder.py  →  .pro file
+"""
+
 import os
+import re
 from datetime import datetime
 
+from formatter import format_scripture
+from pro_builder import generate_pro_file
+
+# Output directory on the user's Desktop
+OUTPUT_DIR = os.path.join(os.path.expanduser('~'), 'Desktop', 'ScriptureBuilder')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
 class ScriptureSlide:
-    """Represents a single scripture slide entry."""
-    def __init__(self, ref, text, screens):
+    """
+    Represents a single raw scripture entry from the UI.
+
+    Fields:
+        ref         — verse reference, e.g. 'John 3:16' or 'John 3:16 (NIV)'
+        text        — raw verse text (may include leading verse numbers)
+        translation — translation label, e.g. 'NIV' (optional, may already
+                      be embedded in ref)
+        screens     — list of screen targets (kept for UI display; the .pro
+                      template handles actual screen routing)
+    """
+
+    def __init__(self, ref: str, text: str, screens: list[str],
+                 translation: str | None = None):
         self.ref = ref
         self.text = text
-        self.screens = screens  # e.g. ['left_pillar', 'right_pillar', 'banner']
+        self.screens = screens
+        self.translation = translation
 
-    def to_dict(self):
+    def to_entry(self) -> dict:
+        """
+        Convert to the dict format expected by formatter.format_scripture.
+
+        If the translation is already embedded in the ref (e.g. 'John 3:16 (NIV)')
+        we strip it out so the formatter can re-attach it cleanly.
+        """
+        ref = self.ref.strip()
+        translation = self.translation
+
+        # If ref already contains a translation label, extract it
+        embedded = re.search(r'\s*\(([A-Z]{2,5})\)\s*$', ref)
+        if embedded:
+            translation = embedded.group(1)
+            ref = ref[:embedded.start()].strip()
+
         return {
-            'ref': self.ref,
+            'ref': ref,
             'text': self.text,
-            'screens': self.screens
+            'translation': translation,
         }
+
+
+def build_filename(service_label: str) -> str:
+    """Build a safe .pro filename from the service label."""
+    if service_label:
+        safe = re.sub(r'[^\w\s-]', '', service_label)
+        safe = re.sub(r'\s+', '-', safe).strip('-')
+        return f'{safe}.pro'
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    return f'scriptures-{timestamp}.pro'
 
 
 class ProGenerator:
     """
-    Generates a ProPresenter 7 file from a list of ScriptureSlides.
-
-    Currently outputs a structured JSON placeholder.
-    When proto definitions are available, replace the `build_pro_file`
-    method with real protobuf generation — everything else stays the same.
+    Takes a list of ScriptureSlide objects, runs them through the formatter,
+    and produces a .pro file via pro_builder.
     """
 
-    def __init__(self, slides, output_path):
-        self.slides = slides          # list of ScriptureSlide objects
+    def __init__(self, slides: list[ScriptureSlide], output_path: str):
+        self.slides = slides
         self.output_path = output_path
 
-    def build_slide(self, slide):
+    def build_payloads(self) -> list[dict]:
         """
-        Build a single slide structure.
-
-        TODO: Replace this with real protobuf slide construction
-        once we have the decoded template slide from the church computer.
+        Run each slide through the formatter to produce a flat list of
+        slide payloads (one per .pro slide, accounting for 280-char splits).
         """
-        return {
-            'type': 'scripture_slide',
-            'ref': slide.ref,
-            'text': slide.text,
-            'screens': slide.screens,
-            'layout': 'default_template',  # will reference the real template UUID
-            'text_box': {
-                'position': 'TBD',          # will come from decoded template
-                'font': 'TBD',
-                'font_size': 'TBD',
-                'color': 'TBD'
-            }
-        }
+        payloads = []
+        for slide in self.slides:
+            entry = slide.to_entry()
+            payloads.extend(format_scripture(entry))
+        return payloads
 
-    def build_pro_file(self):
+    def save(self) -> tuple[str, int]:
         """
-        Assembles all slides into a presentation structure.
+        Format all slides and write the .pro file.
 
-        TODO: Replace JSON output with protobuf binary (.pro file)
-        once proto definitions are compiled.
+        Returns:
+            (output_path, slide_count)
         """
-        presentation = {
-            'meta': {
-                'generated_by': 'Scripture Builder',
-                'generated_at': datetime.now().isoformat(),
-                'slide_count': len(self.slides)
-            },
-            'slides': [self.build_slide(s) for s in self.slides]
-        }
-        return presentation
+        payloads = self.build_payloads()
 
-    def save(self):
-        """Save the presentation to the output path."""
-        presentation = self.build_pro_file()
+        if not payloads:
+            raise ValueError('No slide payloads were generated.')
 
-        # TODO: When real proto generation is ready, this becomes:
-        # with open(self.output_path, 'wb') as f:
-        #     f.write(presentation.SerializeToString())
+        generate_pro_file(
+            slide_payloads=payloads,
+            output_path=self.output_path,
+        )
 
-        # For now, save as JSON so we can inspect the structure
-        json_path = self.output_path.replace('.pro', '_preview.json')
-        with open(json_path, 'w') as f:
-            json.dump(presentation, f, indent=2)
-
-        print(f'Saved preview to: {json_path}')
-        return json_path
+        return self.output_path, len(payloads)

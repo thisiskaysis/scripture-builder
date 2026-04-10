@@ -277,10 +277,10 @@ docUpload.addEventListener('change', () => {
 });
 
 function handleUpload(file) {
-  if (!file.name.endsWith('.docx')) {
-    showUploadStatus('Please upload a .docx file.', false);
+  if (!file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
+    showUploadStatus('Please upload a .docx or .pdf file.', false);
     return;
-  }
+}
 
   showUploadStatus('Reading document...', null);
 
